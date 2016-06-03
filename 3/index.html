@@ -11,6 +11,7 @@
         var SquareSize;
         var MousX = 0, MousY = 0, IsDrag = 0;
         var MousXDel = 0, MousYDel = 0, MouseXLast = 0, MouseYLast = 0;
+        var DeltaRor = 0;
 
         function mouse_move() {
             var ev = window.event;
@@ -153,6 +154,13 @@
             shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
             gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
+            shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+            shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+            shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+            shaderProgram.SquareSize = gl.getUniformLocation(shaderProgram, "Size");
+            shaderProgram.MouseX = gl.getUniformLocation(shaderProgram, "MouseX");
+            shaderProgram.MouseY = gl.getUniformLocation(shaderProgram, "MouseY");
+
             // Second shader
             var fragmentShader2 = getShader(gl, "frag", "cube.frag");
             var vertexShader2 = getShader(gl, "vert", "cube.vert");
@@ -172,13 +180,6 @@
             gl.enableVertexAttribArray(shaderProgram2.vertexPositionAttribute);
             shaderProgram2.textureCoordAttribute = gl.getAttribLocation(shaderProgram2, "aTextureCoord");
             gl.enableVertexAttribArray(shaderProgram2.textureCoordAttribute);
-
-            shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram2, "uPMatrix");
-            shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram2, "uMVMatrix");
-            shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram2, "uSampler");
-            shaderProgram.SquareSize = gl.getUniformLocation(shaderProgram2, "Size");
-            shaderProgram.MouseX = gl.getUniformLocation(shaderProgram2, "MouseX");
-            shaderProgram.MouseY = gl.getUniformLocation(shaderProgram2, "MouseY");
 
             shaderProgram2.pMatrixUniform = gl.getUniformLocation(shaderProgram2, "uPMatrix");
             shaderProgram2.mvMatrixUniform = gl.getUniformLocation(shaderProgram2, "uMVMatrix");
@@ -304,7 +305,7 @@
 
             squareVertexPositionBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-            vertices = [
+            var vertices = [
                 1.0, 1.0, 0.0,
                 -1.0, 1.0, 0.0,
                 1.0, -1.0, 0.0,
@@ -323,10 +324,10 @@
         function drawScene() {
             gl.useProgram(shaderProgram);
             gl.bindFramebuffer(gl.FRAMEBUFFER, rttFramebuffer);
-            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+            gl.viewport(0, 0, rttFramebuffer.width, rttFramebuffer.height);
             gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-            mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+            mat4.perspective(45, 1.66, 0.1, 100.0, pMatrix);
 
             mat4.identity(mvMatrix);
 
@@ -335,6 +336,7 @@
             gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
             setMatrixUniforms();
             gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
+
             gl.bindTexture(gl.TEXTURE_2D, rttTexture);
             gl.generateMipmap(gl.TEXTURE_2D);
             gl.bindTexture(gl.TEXTURE_2D, null);
@@ -342,6 +344,7 @@
             gl.useProgram(shaderProgram2);
 
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
 
             mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
 
@@ -349,19 +352,26 @@
 
             mat4.translate(mvMatrix, [0.0, 0.0, -5.0]);
 
-            mat4.rotate(mvMatrix, degToRad(30), [1, 0, 0]);
+            mat4.rotate(mvMatrix, degToRad(DeltaRor), [1, 0, 0]);
             mat4.rotate(mvMatrix, degToRad(0), [0, 1, 0]);
             mat4.rotate(mvMatrix, degToRad(0), [0, 0, 1]);
 
+            DeltaRor += 1;
+
             gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-            gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(shaderProgram2.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexTextureCoordBuffer);
-            gl.vertexAttribPointer(shaderProgram.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(shaderProgram2.textureCoordAttribute, cubeVertexTextureCoordBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
             gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, Texture);
-            gl.uniform1i(shaderProgram.samplerUniform, 0);
+            gl.bindTexture(gl.TEXTURE_2D, rttTexture);
+            gl.uniform1i(shaderProgram2.samplerUniform, 0);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+            gl.uniformMatrix4fv(shaderProgram2.pMatrixUniform, false, pMatrix);
+            gl.uniformMatrix4fv(shaderProgram2.mvMatrixUniform, false, mvMatrix);
+            gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
         }
 
         function webGLStart() {
@@ -384,9 +394,7 @@
 </head>
 
 <body onload="webGLStart();" style="margin: 0; padding: 0">
-<canvas id="lesson01-canvas" style="border: none;" width="1920" height="1080"
-        onmousedown="mouse_position();" onmousemove="mouse_move();" onmouseup="mouse_drop();"
-        onwheel="onWheel();"></canvas>
+<canvas id="lesson01-canvas" style="border: none;" width="1920" height="1080"></canvas>
 <!--<input type="text" id="RunTimes" onkeyup="MandelTime();" , value="30.0">-->
 <br/>
 <!--<input type="text" id="square_size" onkeyup="InputSize();">-->

@@ -13,6 +13,23 @@
         var MandelTimes = 30.0;
         var WheelDelta = 1;
         var MousXDel = 0, MousYDel = 0, MouseXLast = 0, MouseYLast = 0;
+        var canvas = document.getElementById("lesson01-canvas");
+        var draw_area =
+        {
+            left: -1,
+            right: 1,
+            bottom: -1,
+            top: 1,
+            scale: 1
+        };
+
+        function getMousePos(evt) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
 
         function mouse_move() {
             var ev = window.event;
@@ -36,27 +53,28 @@
             IsDrag = 0;
         }
 
-        function onWheel() {
-            var oldzoom = WheelDelta;
-            var ZoomX = 0, ZoomY = 0;
-            var DeltaX, DeltaY;
-            e = window.event;
 
-            DeltaX = e.clientX - MouseXLast;
-            DeltaY = e.clientY - MouseYLast;
-            ZoomX += DeltaX;
-            ZoomY += DeltaY;
-
-            var delta = e.deltaY || e.detail || e.wheelDelta;
-            if (delta > 0)
-                WheelDelta *= 2;
+        function update_borders(mouse_pos, scroll) {
+            var new_scale = 1;
+            if (scroll > 0)
+                new_scale *= 1 + 0.5 * scroll / 100;
             else
-                WheelDelta /= 2;
+                new_scale /= 1 - 0.5 * scroll / 100;
+            new_l = draw_area.left + mouse_pos.x / 500 * (draw_area.right - draw_area.left) * (1 - new_scale);
+            new_b = draw_area.bottom + mouse_pos.y / 500 * (draw_area.top - draw_area.bottom) * (1 - new_scale);
+            new_r = new_l + (draw_area.right - draw_area.left) * new_scale;
+            new_t = new_b + (draw_area.top - draw_area.bottom) * new_scale;
+            draw_area.left = new_l;
+            draw_area.right = new_r;
+            draw_area.bottom = new_b;
+            draw_area.top = new_t;
+        }
 
-            MousX = ZoomX * (oldzoom - WheelDelta)
-            MousY = ZoomY * (oldzoom - WheelDelta)
-
-            e.preventDefault ? e.preventDefault() : (e.returnValue = false);
+        function onWheel() {
+            e = window.event;
+            var mousePos = getMousePos(e);
+            var modifiedMousePos = {x: mousePos.x, y: 500 - mousePos.y};
+            update_borders(modifiedMousePos, e.deltaY);
         }
 
 
@@ -138,8 +156,8 @@
         var shaderProgram;
 
         function initShaders() {
-            var fragmentShader = getShader(gl, "frag","shader.frag");
-            var vertexShader = getShader(gl, "vert","shader.vert");
+            var fragmentShader = getShader(gl, "frag", "shader.frag");
+            var vertexShader = getShader(gl, "vert", "shader.vert");
 
             shaderProgram = gl.createProgram();
             gl.attachShader(shaderProgram, vertexShader);
@@ -162,7 +180,7 @@
             shaderProgram.MouseX = gl.getUniformLocation(shaderProgram, "MouseX");
             shaderProgram.MouseY = gl.getUniformLocation(shaderProgram, "MouseY");
             shaderProgram.MTimes = gl.getUniformLocation(shaderProgram, "MTime");
-            shaderProgram.Zoom = gl.getUniformLocation(shaderProgram, "Zoom");
+            shaderProgram.area_unifrom = gl.getUniformLocation(shaderProgram, "Area");
         }
 
         var mvMatrix = mat4.create();
@@ -176,6 +194,7 @@
             gl.uniform1f(shaderProgram.MouseY, MousY);
             gl.uniform1f(shaderProgram.MTimes, MandelTimes);
             gl.uniform1f(shaderProgram.Zoom, WheelDelta);
+            gl.uniform4f(shaderProgram.area_unifrom, draw_area.left, draw_area.right, draw_area.bottom, draw_area.top);
         }
 
         var triangleVertexPositionBuffer;
@@ -204,7 +223,6 @@
 
             mat4.identity(mvMatrix);
 
-
             mat4.translate(mvMatrix, [0.0, 0.0, -1.0]);
             gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
             gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -214,11 +232,9 @@
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, Texture);
             gl.uniform1i(shaderProgram.samplerUniform, 0);
-
         }
 
         function webGLStart() {
-            var canvas = document.getElementById("lesson01-canvas");
             initGL(canvas);
             initShaders();
             initBuffers();

@@ -17,10 +17,7 @@ float mandel( void ) {
 }
 
 void main( void ) {
-    vec3 texcolor = texture2D(uSampler,(cord - 8.0) / 3.4).rgb;
     float n = mandel();
     gl_FragColor = vec4(n / 30.0, 0, n / 36.0, 1);
-    gl_FragColor = vec4(1, 0, 1, 1);
-
 }
 

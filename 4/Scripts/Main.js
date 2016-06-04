@@ -5,18 +5,18 @@
 var scene;
 var camera;
 var renderer;
-var geometry;
-var material;
-var cube;
+var geometrySphere, geometryPlane;
+var materialSphere, materialPlane;
+var cube, plane;
 var WindowW, WindowH;
 
 
 function tick() {
-    window.requestAnimationFrame(tick);
-    Render();
-}
+    var vec = new THREE.Vector3(0, 0, 0);
+    var clock = new THREE.Clock;
 
-function Render() {
+    window.requestAnimationFrame(tick);
+
     if (WindowW != window.innerWidth || WindowH != window.innerHeight) {
         WindowW = window.innerWidth;
         WindowH = window.innerHeight;
@@ -24,6 +24,14 @@ function Render() {
         renderer.setSize(WindowW, WindowH);
     }
 
+    //camera.position.x = Math.sin(clock.getElapsedTime) ;
+    //camera.position.z = Math.cos(clock.getElapsedTime) ;
+    //camera.lookAt = vec;
+
+    Render();
+}
+
+function Render() {
     cube.rotation.x += 0.01;
     cube.rotation.y += 0.01;
 
@@ -33,19 +41,25 @@ function Render() {
 function InitScene() {
     scene = new THREE.Scene();
     scene.add(cube);
+    scene.add(plane);
 }
 
 function InitCamera() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.position.z = 5;
+    camera.position.x = 5;
+    camera.rotation.x = 1;
+    camera.rotation.y = 1;
 }
 
 function InitMaterial() {
-    material = new THREE.MeshBasicMaterial({color: 0x00ff00, wireframe: true});
+    materialSphere = new THREE.MeshBasicMaterial({color: 0x00ff00, wireframe: true});
+    materialPlane = new THREE.MeshBasicMaterial({color: 0x0000ff});
 }
 
 function InitGeometru() {
-    geometry = new THREE.SphereGeometry(1, 100);
+    geometrySphere = new THREE.SphereGeometry(1, 100);
+    geometryPlane = new THREE.PlaneGeometry(5, 20, 32 );
 }
 
 function InitRender() {
@@ -57,7 +71,8 @@ function InitRender() {
 }
 
 function InitObjects() {
-    cube = new THREE.Mesh(geometry, material);
+    cube = new THREE.Mesh(geometrySphere, materialSphere);
+    plane = new THREE.Mesh(geometryPlane, materialPlane);
 }
 
 function LoadModel(path, name) {

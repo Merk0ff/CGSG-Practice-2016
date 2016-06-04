@@ -1,6 +1,6 @@
 # CGSG-Practice-2016
-Author: Philip Dukshtau
+## Author: Philip Dukshtau
 
-About branches:
-  master - finished tasks
-  exp -  tasks in progress
+About branches:</br>
+  master - finished tasks</br>
+  exp -  tasks in progress</br>

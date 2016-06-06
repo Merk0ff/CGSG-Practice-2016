@@ -5,16 +5,17 @@
 var scene;
 var camera;
 var renderer;
-var geometrySphere, geometryPlane;
-var materialSphere, materialPlane;
-var cube, plane;
+var geometrySphere, geometryCube;
+var materialSphere, materialCube;
+var sphere, cube;
 var WindowW, WindowH;
+var controls;
+var stats, container;
+var CubeMapTex, cubeCamera, cubeCamera2;
+var SkyBox;
 
 
 function tick() {
-    var vec = new THREE.Vector3(0, 0, 0);
-    var clock = new THREE.Clock;
-
     window.requestAnimationFrame(tick);
 
     if (WindowW != window.innerWidth || WindowH != window.innerHeight) {
@@ -23,83 +24,69 @@ function tick() {
         camera.aspect = window.innerWidth / window.innerHeight;
         renderer.setSize(WindowW, WindowH);
     }
-
-    //camera.position.x = Math.sin(clock.getElapsedTime) ;
-    //camera.position.z = Math.cos(clock.getElapsedTime) ;
-    //camera.lookAt = vec;
-
+    controls.update();
     Render();
 }
 
 function Render() {
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    var time = Date.now();
+
+    sphere.visible = false;
+    cubeCamera.position.copy(sphere.position);
+    cubeCamera.updateCubeMap(renderer, scene);
+    sphere.visible = true;
+
+    cube.position.x = Math.cos(time * 0.0007) * 7;
+    cube.position.y = Math.sin(time * 0.0007) * 7;
+    cube.position.z = Math.sin(time * 0.0007) * 7;
+
+    cube.visible = false;
+    cubeCamera2.position.copy(cube.position);
+    cubeCamera2.updateCubeMap(renderer, scene);
+    cube.visible = true;
 
     renderer.render(scene, camera);
-};
-
-function InitScene() {
-    scene = new THREE.Scene();
-    scene.add(cube);
-    scene.add(plane);
+    stats.update();
 }
 
-function InitCamera() {
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 5;
-    camera.position.x = 5;
-    camera.rotation.x = 1;
-    camera.rotation.y = 1;
-}
 
-function InitMaterial() {
-    materialSphere = new THREE.MeshBasicMaterial({color: 0x00ff00, wireframe: true});
-    materialPlane = new THREE.MeshBasicMaterial({color: 0x0000ff});
-}
+function CreateSkyBox() {
+    InitCubeTexture('Resources/Textures/SkyBox/');
 
-function InitGeometru() {
-    geometrySphere = new THREE.SphereGeometry(1, 100);
-    geometryPlane = new THREE.PlaneGeometry(5, 20, 32 );
-}
+    var shader = THREE.ShaderLib['cube'];
+    shader.uniforms['tCube'].value = CubeMapTex;
 
-function InitRender() {
-    renderer = new THREE.WebGLRenderer();
-    document.body.appendChild(renderer.domElement);
-    WindowW = window.innerWidth;
-    WindowH = window.innerHeight;
-    renderer.setSize(WindowW, WindowH);
-}
-
-function InitObjects() {
-    cube = new THREE.Mesh(geometrySphere, materialSphere);
-    plane = new THREE.Mesh(geometryPlane, materialPlane);
-}
-
-function LoadModel(path, name) {
-    var Vec = new THREE.Vector3(0, 1, 0);
-    var mtlLoader = new THREE.MTLLoader();
-    mtlLoader.setPath(path);
-    mtlLoader.load(name + '.mtl', function (materials) {
-        materials.preload();
-        var objLoader = new THREE.OBJLoader();
-        objLoader.setMaterials(materials);
-        objLoader.setPath(path);
-        objLoader.load(name + '.obj',
-            function (object) {
-                scene.add(object);
-            });
+    var skyBoxMaterial = new THREE.ShaderMaterial({
+        fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader,
+        uniforms: shader.uniforms,
+        depthWrite: false,
+        side: THREE.DoubleSide
     });
 
+    SkyBox = new THREE.Mesh(
+        new THREE.CubeGeometry(1000, 1000, 1000),
+        skyBoxMaterial
+    );
+
+    cubeCamera = new THREE.CubeCamera(1, 100000, 512);
+    cubeCamera2 = new THREE.CubeCamera(1, 100000, 512);
 }
 
 function StartGr() {
     InitRender();
     InitCamera();
     InitGeometru();
+
+    CreateSkyBox();
+
     InitMaterial();
     InitObjects();
     InitScene();
-    LoadModel('Resources/CESSNA/', ' Cessna_172');
+    InitStats();
+
+    //LoadModel('Resources/CESSNA/', ' Cessna_172');
+    InitControl();
     Render();
     tick();
 }

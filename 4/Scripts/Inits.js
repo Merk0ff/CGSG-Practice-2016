@@ -6,7 +6,9 @@ function InitScene() {
     scene = new THREE.Scene();
     scene.add(SkyBox);
     scene.add(cubeCamera);
-    scene.add(cube);
+    scene.add(cubeCamera2)
+    scene.add(sphere);
+    scene.add(cube)
 }
 
 function InitStats() {
@@ -23,26 +25,17 @@ function InitCamera() {
 }
 
 function InitMaterial() {
-    materialSphere =
-        new THREE.ShaderMaterial({
-            uniforms: {
-                "cubemap": {
-                    type: "t",
-                    value: cubeCamera.renderTarget
-                },
-                "camPos": {
-                    type: "v3",
-                    value: camera.position
-                }
-            },
-            vertexShader: OpenFile('Resources/Shader/Reflect/reflect.vert'),
-            fragmentShader: OpenFile('Resources/Shader/Reflect/reflect.frag')
-        });
+    materialSphere = new THREE.MeshBasicMaterial({
+        envMap: cubeCamera.renderTarget
+    });
+    materialCube = new THREE.MeshBasicMaterial({
+        envMap: cubeCamera2.renderTarget
+    });
 }
 
 function InitGeometru() {
-    geometrySphere = new THREE.SphereGeometry(1, 100);
-    geometryPlane = new THREE.PlaneGeometry(2, 10, 10);
+    geometrySphere = new THREE.SphereGeometry(3, 100, 100);
+    geometryCube = new THREE.BoxGeometry(3, 3, 3, 3);
 }
 
 function InitRender() {
@@ -54,8 +47,8 @@ function InitRender() {
 }
 
 function InitObjects() {
-    cube = new THREE.Mesh(geometrySphere, materialSphere);
-    plane = new THREE.Mesh(geometryPlane, materialPlane);
+    sphere = new THREE.Mesh(geometrySphere, materialSphere);
+    cube = new THREE.Mesh(geometryCube, materialCube);
 }
 
 function InitCubeTexture(path) {

@@ -4,8 +4,9 @@
 
 function InitScene() {
     scene = new THREE.Scene();
+    scene.add(SkyBox);
+    scene.add(cubeCamera);
     scene.add(cube);
-    scene.add(plane);
 }
 
 function InitStats() {
@@ -22,13 +23,26 @@ function InitCamera() {
 }
 
 function InitMaterial() {
-    materialSphere = new THREE.MeshBasicMaterial({color: 0x00ff00, wireframe: true});
-    materialPlane = new THREE.MeshBasicMaterial({color: 0x0000ff});
+    materialSphere =
+        new THREE.ShaderMaterial({
+            uniforms: {
+                "cubemap": {
+                    type: "t",
+                    value: cubeCamera.renderTarget
+                },
+                "camPos": {
+                    type: "v3",
+                    value: camera.position
+                }
+            },
+            vertexShader: OpenFile('Resources/Shader/Reflect/reflect.vert'),
+            fragmentShader: OpenFile('Resources/Shader/Reflect/reflect.frag')
+        });
 }
 
 function InitGeometru() {
     geometrySphere = new THREE.SphereGeometry(1, 100);
-    geometryPlane = new THREE.PlaneGeometry(5, 20, 32);
+    geometryPlane = new THREE.PlaneGeometry(2, 10, 10);
 }
 
 function InitRender() {
@@ -43,6 +57,21 @@ function InitObjects() {
     cube = new THREE.Mesh(geometrySphere, materialSphere);
     plane = new THREE.Mesh(geometryPlane, materialPlane);
 }
+
+function InitCubeTexture(path) {
+    var urls = [
+        path + 'XPOS.jpg',
+        path + 'XNEG.jpg',
+        path + 'YPOS.jpg',
+        path + 'YNEG.jpg',
+        path + 'ZPOS.jpg',
+        path + 'ZNEG.jpg'
+    ];
+
+    CubeMapTex = THREE.ImageUtils.loadTextureCube(urls);
+    CubeMapTex.format = THREE.RGBFormat;
+}
+
 
 function InitControl() {
     controls = new THREE.TrackballControls(camera);

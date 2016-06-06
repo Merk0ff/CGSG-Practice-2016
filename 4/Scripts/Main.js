@@ -11,6 +11,9 @@ var cube, plane;
 var WindowW, WindowH;
 var controls;
 var stats, container;
+var CubeMapTex, cubeCamera;
+var SkyBox;
+var Shader;
 
 
 function tick() {
@@ -35,37 +38,44 @@ function Render() {
 }
 
 
-function LoadModel(path, name) {
-    var Vec = new THREE.Vector3(0, 1, 0);
-    var mtlLoader = new THREE.MTLLoader();
-    mtlLoader.setPath(path);
-    mtlLoader.load(name + '.mtl', function (materials) {
-        materials.preload();
-        var objLoader = new THREE.OBJLoader();
-        objLoader.setMaterials(materials);
-        objLoader.setPath(path);
-        objLoader.load(name + '.obj',
-            function (object) {
-                scene.add(object);
-            });
+function CreateSkyBox() {
+    InitCubeTexture('Resources/Textures/SkyBox/');
+
+    var shader = THREE.ShaderLib['cube'];
+    shader.uniforms['tCube'].value = CubeMapTex;
+
+    var skyBoxMaterial = new THREE.ShaderMaterial({
+        fragmentShader: shader.fragmentShader,
+        vertexShader: shader.vertexShader,
+        uniforms: shader.uniforms,
+        depthWrite: false,
+        side: THREE.BackSide
     });
 
-}
+    SkyBox = new THREE.Mesh(
+        new THREE.CubeGeometry(1000, 1000, 1000),
+        skyBoxMaterial
+    );
 
+    cubeCamera = new THREE.CubeCamera(1, 100000, 512);
+    cubeCamera.position.y = 4;
+}
 
 function StartGr() {
     InitRender();
     InitCamera();
     InitGeometru();
+
+    CreateSkyBox();
+
     InitMaterial();
     InitObjects();
     InitScene();
     InitStats();
 
-    LoadModel('Resources/CESSNA/', ' Cessna_172');
+    //LoadModel('Resources/CESSNA/', ' Cessna_172');
     InitControl();
     Render();
-    controls.update();
     tick();
 }
 

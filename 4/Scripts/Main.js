@@ -21,7 +21,11 @@ function tick() {
     if (WindowW != window.innerWidth || WindowH != window.innerHeight) {
         WindowW = window.innerWidth;
         WindowH = window.innerHeight;
-        camera.aspect = window.innerWidth / window.innerHeight;
+        var camera2 = new THREE.PerspectiveCamera(75, WindowW / WindowH, 0.1, 1000);
+        camera2.position.z = 5;
+
+        camera.copy(camera2);
+
         renderer.setSize(WindowW, WindowH);
     }
     controls.update();

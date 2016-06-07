@@ -1,0 +1,29 @@
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+    <script type="text/javascript" src="4/Scripts/Lib/jquery-2.2.4.min.js"></script>
+</head>
+
+<script type="text/javascript">
+    function InputFile(path) {
+        $.ajax({
+            url: path,
+            success: function (data) {
+                console.log('load ' + path + ' successfully complete');
+                document.getElementById('Content').innerHTML = data;
+            }
+        });
+    }
+</script>
+
+<body>
+<h2 style="color: darkorange;">PD6</h2>
+<ul>
+    <input value="1" onclick="InputFile('2/index.html');" type="button">
+    <input value="2" onclick="InputFile('3/index.html');" type="button">
+    <input value="3" onclick="InputFile('4/index.html');" type="button">
+</ul>
+<div id="Content"></div>
+</body>
+</html>

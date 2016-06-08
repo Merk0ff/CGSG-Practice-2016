@@ -25,11 +25,35 @@ function InitCamera() {
 }
 
 function InitMaterial() {
-    materialSphere = new THREE.MeshBasicMaterial({
-        envMap: cubeCamera.renderTarget
+    materialSphere = new THREE.ShaderMaterial({
+        uniforms: {
+            "cubemap": {
+                type: "t",
+                value: cubeCamera.renderTarget
+            },
+            "camPos": {
+                type: "v3",
+                value: camera.position
+            }
+        },
+        vertexShader: OpenFile("Resources/Shader/Reflect.vert"),
+        fragmentShader: OpenFile("Resources/Shader/Reflect.frag"),
+        color: 0xaa5555
     });
-    materialCube = new THREE.MeshBasicMaterial({
-        envMap: cubeCamera2.renderTarget
+    materialCube = new THREE.ShaderMaterial({
+        uniforms: {
+            "cubemap": {
+                type: "t",
+                value: cubeCamera2.renderTarget
+            },
+            "camPos": {
+                type: "v3",
+                value: camera.position
+            }
+        },
+        vertexShader: OpenFile("Resources/Shader/Reflect.vert"),
+        fragmentShader: OpenFile("Resources/Shader/Reflect.frag"),
+        color: 0x33bb33
     });
 }
 
@@ -68,7 +92,7 @@ function InitCubeTexture(path) {
 
 function InitControl() {
     controls = new THREE.TrackballControls(camera);
-    controls.target.set(0, 0, 0)
+    controls.target.set(0, 0, 0);
     controls.rotateSpeed = 2.0;
     controls.zoomSpeed = 2.2;
     controls.panSpeed = 1.8;

@@ -11,7 +11,7 @@
             url: path,
             success: function (data) {
                 console.log('load ' + path + ' successfully complete');
-                document.getElementById('Content').innerHTML = data;
+                $('#Content').html(data);
             }
         });
     }
@@ -24,6 +24,6 @@
     <input value="2" onclick="InputFile('3/index.html');" type="button">
     <input value="3" onclick="InputFile('4/index.html');" type="button">
 </ul>
-<div id="Content"></div>
+<iframe id="Content" width="500" height="500"></iframe>
 </body>
 </html>

@@ -4,10 +4,10 @@
 
 function OpenFile(FileName) {
     var str = "";
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', FileName, false);
-    xhr.send();
-    str = xhr.responseText;
+    var req = new XMLHttpRequest();
+    req.open('GET', FileName, false);
+    req.send();
+    str = req.responseText;
     return str;
 }
 

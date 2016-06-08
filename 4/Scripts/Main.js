@@ -22,7 +22,9 @@ function tick() {
         WindowW = window.innerWidth;
         WindowH = window.innerHeight;
         var camera2 = new THREE.PerspectiveCamera(75, WindowW / WindowH, 0.1, 1000);
-        camera2.position.z = 5;
+        camera2.position.x = camera.position.x;
+        camera2.position.y = camera.position.y;
+        camera2.position.z = camera.position.z;
 
         camera.copy(camera2);
 
